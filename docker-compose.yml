@@ -1,0 +1,16 @@
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: capcycle
+      MYSQL_DATABASE: capcycle
+      MYSQL_USER: capcycle
+      MYSQL_PASSWORD: capcycle
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./hackathon-backend/migrations:/docker-entrypoint-initdb.d:ro
+
+volumes:
+  mysql-data:

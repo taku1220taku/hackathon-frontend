@@ -1,0 +1,60 @@
+import type { DraftItem, Item } from "./types";
+import { categoryByID } from "./categories";
+
+export const fallbackItems: Item[] = [
+  {
+    id: 1,
+    sellerId: 1,
+    title: "Vintage Coach Bag",
+    description: "角スレ小、通学サイズ、90s leather",
+    price: 16800,
+    shippingFee: 700,
+    categoryId: 103,
+    category: "レディース / バッグ",
+    status: "published",
+    conditionScore: 82,
+    context: "角スレ小、通学サイズ、90s leather",
+    images: ["https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=80"],
+  },
+  {
+    id: 2,
+    sellerId: 1,
+    title: "Canon Autoboy",
+    description: "動作確認済み、レンズ内チリ少",
+    price: 12400,
+    shippingFee: 520,
+    categoryId: 303,
+    category: "家電・スマホ・カメラ / カメラ",
+    status: "published",
+    conditionScore: 74,
+    context: "動作確認済み、レンズ内チリ少",
+    images: ["https://images.unsplash.com/photo-1512790182412-b19e6d62bc39?auto=format&fit=crop&w=900&q=80"],
+  },
+  {
+    id: 3,
+    sellerId: 1,
+    title: "Band Hoodie 2024",
+    description: "袖に薄い汚れ、限定会場販売",
+    price: 5900,
+    shippingFee: 850,
+    categoryId: 201,
+    category: "メンズ / トップス",
+    status: "published",
+    conditionScore: 68,
+    context: "袖に薄い汚れ、限定会場販売",
+    images: ["https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=80"],
+  },
+];
+
+export const initialDraft: DraftItem = {
+  title: "",
+  description: "",
+  categoryId: 801,
+  category: categoryByID(801).label,
+  price: "",
+  shippingFee: 700,
+  conditionScore: "",
+  imageUrls: [],
+  imageNames: [],
+  memo: "",
+};
