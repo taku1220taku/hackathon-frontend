@@ -1,6 +1,7 @@
 import { MessageCircle, PackageCheck, ShoppingBag, Store, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
+import { ItemImage } from "../components/ItemImage";
 import { api, asArray } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import type { Transaction } from "../lib/types";
@@ -77,7 +78,7 @@ export function TransactionsPage() {
     return items.map((txn) => (
       <article key={txn.id} className="txn-card-row">
         <Link className="txn-card" to={`/transactions/${txn.id}`}>
-          <img src={txn.item?.images[0] ?? "/theme-reference.png"} alt="" />
+          <ItemImage src={txn.item?.images[0]} alt="" />
           <span className="txn-card-body">
             <span className="txn-card-title">{txn.item?.title ?? `Item ${txn.itemId}`}</span>
             <span className="txn-card-todo">{transactionTodo(txn, user?.id)}</span>

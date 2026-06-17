@@ -1,6 +1,7 @@
 import { Layers3, PackageCheck, PencilLine, Plus, Star, Store, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import { ItemImage } from "../components/ItemImage";
 import { api, asArray } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import type { Item, Review } from "../lib/types";
@@ -81,7 +82,7 @@ export function MyPage() {
         {list.map((item) => (
           <article key={item.id} className="my-item-row">
             <Link to={`/items/${item.id}`} className="my-item-thumb">
-              <img src={item.images[0] ?? "/theme-reference.png"} alt="" />
+              <ItemImage src={item.images[0]} alt="" />
             </Link>
             <Link to={`/items/${item.id}`} className="my-item-info">
               <strong>{item.title}</strong>

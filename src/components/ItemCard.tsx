@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import type { Item } from "../lib/types";
+import { ItemImage } from "./ItemImage";
 
 export function ItemCard({ item, action }: { item: Item; action?: React.ReactNode }) {
   const statusLabel = item.status === "sold" ? "売却済み" : "";
@@ -7,7 +8,7 @@ export function ItemCard({ item, action }: { item: Item; action?: React.ReactNod
   return (
     <article className="item-card">
       <Link to={`/items/${item.id}`} className="image-wrap">
-        <img src={item.images[0] ?? "/theme-reference.png"} alt={item.title} />
+        <ItemImage src={item.images[0]} alt={item.title} />
         <span className="category-badge">{item.category}</span>
         <strong className="price-badge">¥{item.price.toLocaleString()}</strong>
         <small className="condition-badge">状態 {item.conditionScore}</small>

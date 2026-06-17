@@ -1,6 +1,7 @@
 import { CheckCircle2, CreditCard, PackageCheck, SendHorizontal, Star } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { ItemImage } from "../components/ItemImage";
 import { api, asArray } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import type { Message, Review, Transaction } from "../lib/types";
@@ -157,7 +158,7 @@ export function TransactionDetailPage() {
         )}
         {transaction && (
           <Link className="transaction-item-summary" to={`/items/${transaction.itemId}`}>
-            <img src={transaction.item?.images[0] ?? "/theme-reference.png"} alt="" />
+            <ItemImage src={transaction.item?.images[0]} alt="" />
             <div>
               <h3>{transaction.item?.title ?? `Item ${transaction.itemId}`}</h3>
               <strong>{transaction.item ? `¥${transaction.item.price.toLocaleString()}` : ""}</strong>

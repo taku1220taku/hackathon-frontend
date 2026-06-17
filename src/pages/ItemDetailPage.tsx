@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { ItemImage } from "../components/ItemImage";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { fallbackItems } from "../lib/fallback";
@@ -93,7 +94,7 @@ export function ItemDetailPage() {
   return (
     <section className="detail-page">
       <div className="detail-media">
-        <img src={item.images[0] ?? "/theme-reference.png"} alt={item.title} />
+        <ItemImage src={item.images[0]} alt={item.title} />
       </div>
       <section className="panel">
         <p className="eyebrow">{item.category}</p>
