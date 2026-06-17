@@ -19,6 +19,7 @@ export type Item = {
   conditionScore: number;
   context: string;
   images: string[];
+  sellerCanDelete: boolean;
 };
 
 export type Transaction = {

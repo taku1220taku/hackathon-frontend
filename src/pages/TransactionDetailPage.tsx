@@ -1,6 +1,6 @@
 import { CheckCircle2, CreditCard, PackageCheck, SendHorizontal, Star } from "lucide-react";
 import { FormEvent, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { api, asArray } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import type { Message, Review, Transaction } from "../lib/types";
@@ -26,6 +26,7 @@ export function TransactionDetailPage() {
   const [messageBody, setMessageBody] = useState("");
   const transaction = transactions.find((txn) => txn.id === txnID);
   const isBuyer = Boolean(transaction && transaction.buyerId === user?.id);
+  const isSeller = Boolean(transaction && transaction.sellerId === user?.id);
   const canPay = Boolean(isBuyer && transaction?.status === "pending");
   const canComplete = Boolean(isBuyer && transaction?.status === "active");
   const myReview = reviews.find((review) => review.reviewerId === user?.id && review.transactionId === txnID);
@@ -155,14 +156,14 @@ export function TransactionDetailPage() {
           </div>
         )}
         {transaction && (
-          <section className="transaction-item-summary">
+          <Link className="transaction-item-summary" to={`/items/${transaction.itemId}`}>
             <img src={transaction.item?.images[0] ?? "/theme-reference.png"} alt="" />
             <div>
               <h3>{transaction.item?.title ?? `Item ${transaction.itemId}`}</h3>
               <strong>{transaction.item ? `¥${transaction.item.price.toLocaleString()}` : ""}</strong>
               <p>{isBuyer ? "購入した商品" : "販売した商品"}</p>
             </div>
-          </section>
+          </Link>
         )}
         {transaction && transaction.status !== "done" && (
           <section className="transaction-action-panel">
@@ -208,7 +209,10 @@ export function TransactionDetailPage() {
             </button>
           </form>
         </section>
-        {transaction?.status === "done" && !myReview && (
+        {transaction?.status === "done" && isSeller && !transaction.partnerReviewed && !myReview && (
+          <div className="done-summary">購入者の評価を待っています。購入者が評価すると、出品者も評価できます。</div>
+        )}
+        {transaction?.status === "done" && !myReview && !(isSeller && !transaction.partnerReviewed) && (
           <form className="review-form" onSubmit={submitReview}>
             <label>
               評価

@@ -94,9 +94,13 @@ export function MyPage() {
                   公開
                 </button>
               )}
-              <button className="icon-action danger-action" disabled={busy === item.id} onClick={() => deleteItem(item)} aria-label="削除">
-                <Trash2 size={15} />
-              </button>
+              {item.sellerCanDelete ? (
+                <button className="icon-action danger-action" disabled={busy === item.id} onClick={() => deleteItem(item)} aria-label="削除">
+                  <Trash2 size={15} />
+                </button>
+              ) : (
+                <span className="item-delete-lock">評価待ち</span>
+              )}
             </div>
           </article>
         ))}

@@ -57,6 +57,7 @@ export function SellPage() {
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState(user ? "" : "出品するにはログインしてください");
   const [blurBackground, setBlurBackground] = useState(false);
+  const [targetSellDays, setTargetSellDays] = useState<number | "">(7);
   const [priceSuggestion, setPriceSuggestion] = useState<PriceSuggestion | null>(null);
   const [fraudResult, setFraudResult] = useState<FraudCheckResult | null>(null);
 
@@ -90,6 +91,7 @@ export function SellPage() {
         body: { imageUrl: primaryImage, memo: draft.memo },
       });
       const category = result.categoryId ? categoryByID(result.categoryId) : categoryByLabel(result.category);
+      setPriceSuggestion(null);
       setDraft((current) => ({
         ...current,
         title: result.title,
@@ -97,14 +99,8 @@ export function SellPage() {
         categoryId: category.id,
         category: category.label,
         conditionScore: result.conditionScore,
-        price: result.suggestedPrice,
       }));
-      setPriceSuggestion({
-        suggestedPrice: result.suggestedPrice,
-        marketRange: [Math.round(result.suggestedPrice * 0.85), Math.round(result.suggestedPrice * 1.15)],
-        sellThroughDays: result.sellThroughDays,
-      });
-      setNotice(`AIが状態${result.conditionScore}点、${result.sellThroughDays}日売却見込みで下書きを作成しました`);
+      setNotice(`AIが状態${result.conditionScore}点の下書きを作成しました。価格は価格提案から設定してください`);
     });
   }
 
@@ -119,12 +115,13 @@ export function SellPage() {
           category: draft.category,
           categoryId: draft.categoryId,
           conditionScore: Number(draft.conditionScore || 75),
+          targetSellDays: Number(targetSellDays || 7),
           images: draft.imageUrls,
         },
       });
       setPriceSuggestion(result);
       setDraft((current) => ({ ...current, price: result.suggestedPrice }));
-      setNotice(`AI価格提案を反映しました。${result.sellThroughDays}日売却見込みです`);
+      setNotice(`AI価格提案を反映しました。${result.sellThroughDays}日以内の売却目安です`);
     });
   }
 
@@ -292,6 +289,17 @@ export function SellPage() {
           {busy === "assist" ? "生成中" : "AIで下書き生成"}
         </button>
         <div className="ai-action-grid">
+          <label className="compact-field">
+            売りたい日数
+            <input
+              type="number"
+              min="1"
+              max="60"
+              value={targetSellDays}
+              placeholder="7"
+              onChange={(event) => setTargetSellDays(event.target.value === "" ? "" : Number(event.target.value))}
+            />
+          </label>
           <button disabled={busy === "price" || !token} onClick={runPriceSuggest}>
             <Tags size={16} />
             {busy === "price" ? "提案中" : "価格提案"}
@@ -367,7 +375,7 @@ export function SellPage() {
             <strong>AI価格提案</strong>
             <span>推奨 ¥{priceSuggestion.suggestedPrice.toLocaleString()}</span>
             <small>
-              相場 ¥{priceSuggestion.marketRange[0].toLocaleString()} - ¥{priceSuggestion.marketRange[1].toLocaleString()} / {priceSuggestion.sellThroughDays}日売却見込み
+              相場 ¥{priceSuggestion.marketRange[0].toLocaleString()} - ¥{priceSuggestion.marketRange[1].toLocaleString()} / {priceSuggestion.sellThroughDays}日以内の売却目安
             </small>
           </div>
         )}

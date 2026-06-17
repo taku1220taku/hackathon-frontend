@@ -56,6 +56,7 @@ button {
 .brand-link {
   color: inherit;
   text-decoration: none;
+  cursor: pointer;
 }
 
 .main-nav {
@@ -777,6 +778,20 @@ meter::-webkit-meter-optimum-value {
   padding-inline: 10px;
 }
 
+.item-delete-lock {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border-radius: 999px;
+  padding: 0 9px;
+  background: rgba(220, 163, 76, 0.16);
+  color: #e7c47d;
+  font-size: 0.72rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
 .field-heading {
   display: block;
   color: #f5eddf;
@@ -971,7 +986,7 @@ meter::-webkit-meter-optimum-value {
 
 .ai-action-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(110px, 0.8fr) 1fr 1fr;
   gap: 8px;
 }
 
@@ -980,6 +995,18 @@ meter::-webkit-meter-optimum-value {
   align-items: center;
   justify-content: center;
   gap: 8px;
+}
+
+.compact-field {
+  display: grid;
+  gap: 4px;
+  color: #d4c7ae;
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.compact-field input {
+  min-height: 42px;
 }
 
 .ai-result-card {
@@ -1446,6 +1473,13 @@ meter::-webkit-meter-optimum-value {
   border-radius: 8px;
   padding: 10px;
   background: rgba(245, 237, 223, 0.045);
+  color: inherit;
+  text-decoration: none;
+}
+
+.transaction-item-summary:hover {
+  border-color: rgba(220, 163, 76, 0.34);
+  background: rgba(245, 237, 223, 0.065);
 }
 
 .transaction-item-summary img {

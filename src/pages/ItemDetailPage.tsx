@@ -19,7 +19,7 @@ export function ItemDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    api<Item>(`/items/${id}`)
+    api<Item>(`/items/${id}`, token ? { token } : {})
       .then(setItem)
       .catch((error) => {
         const fallback = fallbackItems.find((nextItem) => nextItem.id === Number(id));
@@ -30,7 +30,7 @@ export function ItemDetailPage() {
         }
         setNotice(error instanceof Error ? error.message : "商品を取得できませんでした");
       });
-  }, [id]);
+  }, [id, token]);
 
   async function requestPurchase() {
     if (!item) return;
