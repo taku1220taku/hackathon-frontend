@@ -26,7 +26,7 @@ export function HomePage() {
   useEffect(() => {
     setPage(1);
     void refreshItems(1, true);
-  }, [q, category, sort, minPrice, maxPrice, user?.id]);
+  }, [q, category, sort, minPrice, maxPrice, token, user?.id]);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -56,7 +56,7 @@ export function HomePage() {
       if (maxPrice) params.set("maxPrice", maxPrice);
       const usePersonalized = Boolean(token && sort === "recommended" && !q.trim() && !category && !minPrice && !maxPrice);
       const path = usePersonalized ? `/ai/recommendations?${params.toString()}` : `/items?${params.toString()}`;
-      const result = await api<{ items: Item[]; hasMore: boolean }>(path, usePersonalized ? { token } : {});
+      const result = await api<{ items: Item[]; hasMore: boolean }>(path, token ? { token } : {});
       const nextItems = asArray(result.items).filter((item) => item.sellerId !== user?.id);
       setItems((current) => (replace ? nextItems : [...current, ...nextItems]));
       setHasMore(Boolean(result.hasMore));
@@ -67,6 +67,23 @@ export function HomePage() {
       setNotice("API未接続でもデモデータで体験できます");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function toggleLike(item: Item) {
+    if (!token) {
+      setNotice("いいねするにはログインしてください");
+      return;
+    }
+    try {
+      const updated = await api<Item>(`/items/${item.id}/like`, {
+        method: item.likedByMe ? "DELETE" : "POST",
+        token,
+        body: {},
+      });
+      setItems((current) => current.map((nextItem) => (nextItem.id === updated.id ? updated : nextItem)));
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "いいねに失敗しました");
     }
   }
 
@@ -114,7 +131,7 @@ export function HomePage() {
 
       <div className="item-grid">
         {items.map((item) => (
-          <ItemCard item={item} key={item.id} />
+          <ItemCard item={item} key={item.id} canLike={Boolean(token)} onLike={toggleLike} />
         ))}
       </div>
       <div ref={sentinelRef} className="load-sentinel">

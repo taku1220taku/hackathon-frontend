@@ -127,6 +127,13 @@ button {
   font-size: 2rem;
 }
 
+.detail-price-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .purchase-confirm {
   display: grid;
   gap: 10px;
@@ -515,6 +522,33 @@ button.icon-action,
   color: #d5c6ab;
   font-size: 0.76rem;
   font-weight: 750;
+}
+
+.like-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  min-height: 34px;
+  border: 1px solid rgba(245, 237, 223, 0.14);
+  border-radius: 999px;
+  padding: 0 10px;
+  color: #f5eddf;
+  background: rgba(245, 237, 223, 0.06);
+  font-size: 0.8rem;
+  font-weight: 850;
+}
+
+.like-button.liked {
+  border-color: rgba(239, 102, 97, 0.65);
+  color: #ff7772;
+  background: rgba(239, 102, 97, 0.12);
+}
+
+.like-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
 }
 
 .score-row {

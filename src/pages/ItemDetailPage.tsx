@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { ItemImage } from "../components/ItemImage";
+import { ItemLikeButton } from "../components/ItemLikeButton";
 import { api } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { fallbackItems } from "../lib/fallback";
@@ -82,6 +83,23 @@ export function ItemDetailPage() {
     }
   }
 
+  async function toggleLike() {
+    if (!item || !token) {
+      setNotice("いいねするにはログインしてください");
+      return;
+    }
+    try {
+      const updated = await api<Item>(`/items/${item.id}/like`, {
+        method: item.likedByMe ? "DELETE" : "POST",
+        token,
+        body: {},
+      });
+      setItem(updated);
+    } catch (error) {
+      setNotice(error instanceof Error ? error.message : "いいねに失敗しました");
+    }
+  }
+
   if (!item) {
     return <section className="center-page"><div className="notice">{notice || "読み込み中"}</div></section>;
   }
@@ -99,7 +117,10 @@ export function ItemDetailPage() {
       <section className="panel">
         <p className="eyebrow">{item.category}</p>
         <h2>{item.title}</h2>
-        <strong className="detail-price">¥{item.price.toLocaleString()}</strong>
+        <div className="detail-price-row">
+          <strong className="detail-price">¥{item.price.toLocaleString()}</strong>
+          <ItemLikeButton liked={item.likedByMe} count={item.likeCount} disabled={!token} onToggle={toggleLike} />
+        </div>
         <p>{item.description}</p>
         <div className="score-row">
           <meter min="0" max="100" value={item.conditionScore} />

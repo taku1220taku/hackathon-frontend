@@ -3,6 +3,7 @@ export type User = {
   email: string;
   displayName: string;
   avatarUrl: string;
+  role: "user" | "admin";
   rating: number;
 };
 
@@ -20,6 +21,8 @@ export type Item = {
   context: string;
   images: string[];
   sellerCanDelete: boolean;
+  likeCount: number;
+  likedByMe: boolean;
 };
 
 export type Transaction = {

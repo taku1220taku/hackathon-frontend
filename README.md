@@ -1,6 +1,6 @@
 # CapCycle
 
-AI搭載・次世代フリマアプリのMVPです。既存のReactプロトタイプに、Go API、JWT認証、出品、検索、取引、評価、AI出品補助の土台を追加しています。
+AI搭載・次世代フリマアプリのMVPです。Reactフロントエンドに、Go API、JWT認証、ロール認可、出品、検索、いいね、取引、評価、AI出品補助を追加しています。
 
 ## Local development
 
@@ -52,6 +52,8 @@ GCS_BUCKET=<your-gcs-bucket>
 GCS_PREFIX=uploads
 GCS_PUBLIC_BASE_URL=https://storage.googleapis.com/<your-gcs-bucket>
 ```
+
+本番ではアップロード画像に長い `Cache-Control` を付与し、Cloud CDNを有効化したBackend Bucketを作成して画像配信の最適化に使えます。HTTPSのCDN配信には独自ドメインと証明書を設定してください。
 
 デモログイン:
 
@@ -118,3 +120,7 @@ GEMINI_API_KEY
 ```
 
 Vercelにはフロントエンド用に `VITE_API_BASE_URL=<Cloud Run API URL>` を設定します。
+
+## Security
+
+APIはHS256 JWTを使い、payloadに `sub`, `role`, `iat`, `exp` を含めます。通常ユーザーは `user`、管理APIは `admin` roleだけが通過できます。商品編集、削除、取引、メッセージ、評価は所有者または取引参加者だけに制限しています。

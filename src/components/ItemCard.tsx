@@ -1,8 +1,19 @@
 import { Link } from "react-router-dom";
 import type { Item } from "../lib/types";
 import { ItemImage } from "./ItemImage";
+import { ItemLikeButton } from "./ItemLikeButton";
 
-export function ItemCard({ item, action }: { item: Item; action?: React.ReactNode }) {
+export function ItemCard({
+  item,
+  action,
+  canLike = false,
+  onLike,
+}: {
+  item: Item;
+  action?: React.ReactNode;
+  canLike?: boolean;
+  onLike?: (item: Item) => void;
+}) {
   const statusLabel = item.status === "sold" ? "売却済み" : "";
 
   return (
@@ -19,6 +30,12 @@ export function ItemCard({ item, action }: { item: Item; action?: React.ReactNod
         <p>{item.context || item.description}</p>
         <div className="compact-meta">
           <small>送料 ¥{item.shippingFee.toLocaleString()}</small>
+          <ItemLikeButton
+            liked={item.likedByMe}
+            count={item.likeCount}
+            disabled={!canLike || !onLike}
+            onToggle={() => onLike?.(item)}
+          />
         </div>
         {action}
       </div>

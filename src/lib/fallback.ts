@@ -16,6 +16,8 @@ export const fallbackItems: Item[] = [
     context: "角スレ小、通学サイズ、90s leather",
     images: ["https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=80"],
     sellerCanDelete: true,
+    likeCount: 12,
+    likedByMe: false,
   },
   {
     id: 2,
@@ -31,6 +33,8 @@ export const fallbackItems: Item[] = [
     context: "動作確認済み、レンズ内チリ少",
     images: ["https://images.unsplash.com/photo-1512790182412-b19e6d62bc39?auto=format&fit=crop&w=900&q=80"],
     sellerCanDelete: true,
+    likeCount: 8,
+    likedByMe: false,
   },
   {
     id: 3,
@@ -46,6 +50,8 @@ export const fallbackItems: Item[] = [
     context: "袖に薄い汚れ、限定会場販売",
     images: ["https://images.unsplash.com/photo-1556821840-3a63f95609a7?auto=format&fit=crop&w=900&q=80"],
     sellerCanDelete: true,
+    likeCount: 5,
+    likedByMe: false,
   },
 ];
 

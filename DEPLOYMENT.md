@@ -61,6 +61,27 @@ gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
   --role="roles/storage.objectAdmin"
 ```
 
+画像をCloud CDNで配信する場合はCompute APIを有効化し、Backend Bucketを作成します。HTTPSで使うには独自ドメインと証明書を追加してください。
+
+```bash
+gcloud services enable compute.googleapis.com
+
+gcloud compute backend-buckets create capcycle-uploads \
+  --gcs-bucket-name="$GCS_BUCKET" \
+  --enable-cdn
+
+gcloud compute url-maps create capcycle-uploads-map \
+  --default-backend-bucket=capcycle-uploads
+
+gcloud compute target-http-proxies create capcycle-uploads-proxy \
+  --url-map=capcycle-uploads-map
+
+gcloud compute forwarding-rules create capcycle-uploads-http \
+  --global \
+  --target-http-proxy=capcycle-uploads-proxy \
+  --ports=80
+```
+
 ## 2. Secret Manager
 
 ```bash
@@ -135,6 +156,7 @@ Manual checks:
 
 - Vercelから商品一覧が取得できる
 - 画像アップロード後のURLがGCS URLになる
+- Cloud CDNを使う場合はBackend Bucket URL経由でもアップロード画像が取得できる
 - 商品作成後、Cloud Run再起動後もCloud SQLに残る
 - `demo@capcycle.test` と `buyer@capcycle.test` で出品者/購入者のデモができる
 - AI出品補助、価格提案、出品チェックがGemini設定時に動く
