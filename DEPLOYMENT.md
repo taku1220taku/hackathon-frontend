@@ -1,169 +1,55 @@
-# CapCycle Deployment
+# CapCycle Frontend Deployment
 
-1週間以内にデモ可能な本番環境を作るための標準手順です。GCPリソースは新規作成し、フロントエンドはVercelのGit連携でデプロイします。
+This repository deploys only the Vite frontend to Vercel.
 
-## Standard names
-
-```text
-REGION=asia-northeast1
-SERVICE=capcycle-api
-ARTIFACT_REPO=capcycle
-CLOUD_SQL_INSTANCE=capcycle-mysql
-DB_NAME=capcycle
-DB_USER=capcycle
-GCS_BUCKET=<project-id>-capcycle-uploads
-```
-
-## 1. GCP resources
-
-```bash
-export PROJECT_ID=<your-gcp-project-id>
-export REGION=asia-northeast1
-export SERVICE=capcycle-api
-export ARTIFACT_REPO=capcycle
-export CLOUD_SQL_INSTANCE=capcycle-mysql
-export DB_NAME=capcycle
-export DB_USER=capcycle
-export GCS_BUCKET="${PROJECT_ID}-capcycle-uploads"
-
-gcloud config set project "$PROJECT_ID"
-gcloud services enable run.googleapis.com artifactregistry.googleapis.com sqladmin.googleapis.com secretmanager.googleapis.com iamcredentials.googleapis.com cloudresourcemanager.googleapis.com
-
-gcloud artifacts repositories create "$ARTIFACT_REPO" \
-  --repository-format=docker \
-  --location="$REGION" \
-  --description="CapCycle API images"
-
-gcloud sql instances create "$CLOUD_SQL_INSTANCE" \
-  --database-version=MYSQL_8_0 \
-  --region="$REGION" \
-  --tier=db-f1-micro \
-  --storage-size=10GB
-
-gcloud sql databases create "$DB_NAME" --instance="$CLOUD_SQL_INSTANCE"
-gcloud sql users create "$DB_USER" --instance="$CLOUD_SQL_INSTANCE" --password="<strong-db-password>"
-
-gcloud storage buckets create "gs://${GCS_BUCKET}" --location="$REGION" --uniform-bucket-level-access
-```
-
-Cloud Runの実行サービスアカウントにはCloud SQLとGCSアクセスを付与します。デフォルト実行サービスアカウントを使う場合:
-
-```bash
-PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
-RUNTIME_SA="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-  --member="serviceAccount:${RUNTIME_SA}" \
-  --role="roles/cloudsql.client"
-
-gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
-  --member="serviceAccount:${RUNTIME_SA}" \
-  --role="roles/storage.objectCreator"
-
-gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
-  --member="allUsers" \
-  --role="roles/storage.legacyObjectReader"
-```
-
-`roles/storage.objectViewer` を `allUsers` に付与するとバケット一覧も公開されるため、公開商品画像は `roles/storage.legacyObjectReader` で個別オブジェクトのGETだけを許可します。
-
-画像をCloud CDNで配信する場合はCompute APIを有効化し、Backend Bucketを作成します。HTTPSで使うには独自ドメインと証明書を追加してください。
-
-```bash
-gcloud services enable compute.googleapis.com
-
-gcloud compute backend-buckets create capcycle-uploads \
-  --gcs-bucket-name="$GCS_BUCKET" \
-  --enable-cdn
-
-gcloud compute url-maps create capcycle-uploads-map \
-  --default-backend-bucket=capcycle-uploads
-
-gcloud compute target-http-proxies create capcycle-uploads-proxy \
-  --url-map=capcycle-uploads-map
-
-gcloud compute forwarding-rules create capcycle-uploads-http \
-  --global \
-  --target-http-proxy=capcycle-uploads-proxy \
-  --ports=80
-```
-
-## 2. Secret Manager
-
-```bash
-printf '%s' '<jwt-secret>' | gcloud secrets create JWT_SECRET --data-file=-
-printf '%s' "$DB_USER" | gcloud secrets create DB_USER --data-file=-
-printf '%s' '<strong-db-password>' | gcloud secrets create DB_PASSWORD --data-file=-
-printf '%s' "$DB_NAME" | gcloud secrets create DB_NAME --data-file=-
-printf '%s' '<gemini-api-key>' | gcloud secrets create GEMINI_API_KEY --data-file=-
-```
-
-既にsecretがある場合は `gcloud secrets versions add <NAME> --data-file=-` で最新版を追加します。
-
-## 3. GitHub Actions settings
-
-GitHub ActionsのWorkload Identity Federationを設定し、デプロイ用サービスアカウントにCloud Run/Artifact Registry/Cloud SQL attach権限を付与します。
-
-GitHub Secrets:
+Backend repository:
 
 ```text
-GCP_PROJECT_ID=<project-id>
-GCP_WORKLOAD_IDENTITY_PROVIDER=<projects/.../providers/...>
-GCP_SERVICE_ACCOUNT=<deploy-sa>@<project-id>.iam.gserviceaccount.com
-CORS_ORIGIN=http://localhost:5173,https://<your-vercel-domain>
-PUBLIC_BASE_URL=https://<cloud-run-url>
-GCS_BUCKET=<project-id>-capcycle-uploads
-GCS_PUBLIC_BASE_URL=https://storage.googleapis.com/<project-id>-capcycle-uploads
-CLOUD_SQL_CONNECTION_NAME=<project-id>:asia-northeast1:capcycle-mysql
+https://github.com/taku1220taku/hackathon-backend
 ```
 
-Required roles for the deploy service account:
+Production URLs:
 
 ```text
-roles/run.admin
-roles/artifactregistry.writer
-roles/cloudsql.client
-roles/iam.serviceAccountUser
+Frontend: https://hackathon-frontend-chi-liard.vercel.app
+Backend API: https://capcycle-api-2u3m6oblua-an.a.run.app
 ```
 
-After setting secrets, run **Deploy Cloud Run** manually once from GitHub Actions. The first Cloud Run URL becomes the value for `PUBLIC_BASE_URL`; update the secret and run the workflow again.
+## Vercel
 
-## 4. Vercel
-
-Connect the GitHub repository to Vercel.
+Configure the Vercel project with:
 
 ```text
 Framework Preset: Vite
 Build Command: npm run build
 Output Directory: dist
-Environment Variable: VITE_API_BASE_URL=https://<cloud-run-url>
+VITE_API_BASE_URL=https://capcycle-api-2u3m6oblua-an.a.run.app
 ```
 
 `vercel.json` rewrites all routes to `index.html`, so direct access to `/items/:id`, `/transactions`, and `/me` works with React Router.
 
-After the Vercel production URL is created, add it to `CORS_ORIGIN` and redeploy Cloud Run.
+## CI
 
-## 5. Production smoke test
+`.github/workflows/ci.yml` runs:
 
 ```bash
-API=https://<cloud-run-url>
+npm ci
+npm run build
+```
 
-curl -s "$API/health"
+There is no Cloud Run workflow in this frontend repository. Cloud Run deployment is owned by the backend repository.
 
-TOKEN=$(curl -s "$API/auth/login" \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"demo@capcycle.test","password":"password"}' \
-  | node -e 'let s="";process.stdin.on("data",d=>s+=d);process.stdin.on("end",()=>console.log(JSON.parse(s).data.token))')
+## Smoke Test
 
-curl -s "$API/ai/gemini-status?live=1" -H "Authorization: Bearer $TOKEN"
+```bash
+curl -I https://hackathon-frontend-chi-liard.vercel.app
+curl -s https://capcycle-api-2u3m6oblua-an.a.run.app/health
 ```
 
 Manual checks:
 
-- Vercelから商品一覧が取得できる
-- 画像アップロード後のURLがGCS URLになる
-- Cloud CDNを使う場合はBackend Bucket URL経由でもアップロード画像が取得できる
-- 商品作成後、Cloud Run再起動後もCloud SQLに残る
-- `demo@capcycle.test` と `buyer@capcycle.test` で出品者/購入者のデモができる
-- AI出品補助、価格提案、出品チェックがGemini設定時に動く
-- 購入、取引メッセージ、受取完了、評価、評価待ち/完了表示が動く
+- 商品一覧が表示される
+- `demo@capcycle.test / password` でログインできる
+- 出品、画像アップロード、購入、DM、受取完了、評価が動く
+- 商品詳細で複数画像を閲覧できる
+- 出品者側で閲覧数と動的価格ナビを確認できる
