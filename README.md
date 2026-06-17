@@ -1,6 +1,6 @@
 # CapCycle
 
-AI搭載・次世代フリマアプリのMVPです。Reactフロントエンドに、Go API、JWT認証、ロール認可、出品、検索、いいね、取引、評価、AI出品補助を追加しています。
+AI搭載・次世代フリマアプリのMVPです。Reactフロントエンドに、Go API、JWT認証、ロール認可、出品、検索、いいね、閲覧ストリーム、HJBベースの動的価格ナビ、取引、評価、AI出品補助を追加しています。
 
 ## Local development
 
@@ -64,7 +64,7 @@ buyer@capcycle.test / password
 
 ## Gemini AI
 
-`GEMINI_API_KEY` がある場合は `POST /ai/listing-assist`, `POST /ai/price-suggest`, `POST /ai/fraud-check`, `POST /ai/item-question` がGemini APIを呼びます。未設定時は同じレスポンス形式のモックを返します。
+`GEMINI_API_KEY` がある場合は `POST /ai/listing-assist`, `POST /ai/price-suggest`, `POST /ai/fraud-check`, `POST /ai/item-question` がGemini APIを呼びます。`POST /ai/dynamic-price` は閲覧数、いいね、状態、相場からHJB近似の価格軌道を返します。Gemini未設定時は同じレスポンス形式のモックを返します。
 
 ```bash
 export GEMINI_API_KEY=<your-gemini-api-key>

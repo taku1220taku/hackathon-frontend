@@ -23,6 +23,9 @@ export type Item = {
   sellerCanDelete: boolean;
   likeCount: number;
   likedByMe: boolean;
+  viewCount: number;
+  recentViewCount: number;
+  viewVelocity: number;
 };
 
 export type Transaction = {
@@ -73,6 +76,28 @@ export type PriceSuggestion = {
   suggestedPrice: number;
   marketRange: [number, number];
   sellThroughDays: number;
+};
+
+export type ItemMetrics = {
+  viewCount: number;
+  recentViewCount: number;
+  viewVelocity: number;
+  likeCount: number;
+};
+
+export type DynamicPricePoint = {
+  day: number;
+  price: number;
+  sellProbability: number;
+};
+
+export type DynamicPriceResult = {
+  recommendedPrice: number;
+  expectedSellDays: number;
+  pricePath: DynamicPricePoint[];
+  marketRange: [number, number];
+  confidence: number;
+  explanation: string;
 };
 
 export type FraudCheckResult = {

@@ -5,7 +5,7 @@ import { api, uploadImage } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { categoryByID, categoryByLabel, categoryOptions } from "../lib/categories";
 import { initialDraft } from "../lib/fallback";
-import type { AssistResult, DraftItem, FraudCheckResult, Item, PriceSuggestion } from "../lib/types";
+import type { AssistResult, DraftItem, DynamicPriceResult, FraudCheckResult, Item, PriceSuggestion } from "../lib/types";
 
 async function imageFileWithBlurredBackground(file: File): Promise<File> {
   const imageURL = URL.createObjectURL(file);
@@ -61,6 +61,7 @@ export function SellPage() {
   const [blurBackground, setBlurBackground] = useState(false);
   const [targetSellDays, setTargetSellDays] = useState<number | "">(7);
   const [priceSuggestion, setPriceSuggestion] = useState<PriceSuggestion | null>(null);
+  const [dynamicPrice, setDynamicPrice] = useState<DynamicPriceResult | null>(null);
   const [fraudResult, setFraudResult] = useState<FraudCheckResult | null>(null);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ export function SellPage() {
       });
       const category = result.categoryId ? categoryByID(result.categoryId) : categoryByLabel(result.category);
       setPriceSuggestion(null);
+      setDynamicPrice(null);
       setDraft((current) => ({
         ...current,
         title: result.title,
@@ -130,8 +132,34 @@ export function SellPage() {
         },
       });
       setPriceSuggestion(result);
+      setDynamicPrice(null);
       setDraft((current) => ({ ...current, price: result.suggestedPrice }));
       setNotice(`AI価格提案を反映しました。${result.sellThroughDays}日以内の売却目安です`);
+    });
+  }
+
+  async function runDynamicPrice() {
+    await runTask("dynamic-price", async () => {
+      const currentPrice = Number(draft.price || priceSuggestion?.suggestedPrice || 0);
+      if (currentPrice <= 0) throw new Error("先に価格を入力するか、価格提案を実行してください");
+      const result = await api<DynamicPriceResult>("/ai/dynamic-price", {
+        method: "POST",
+        token,
+        body: {
+          title: draft.title,
+          category: draft.category,
+          categoryId: draft.categoryId,
+          currentPrice,
+          conditionScore: Number(draft.conditionScore || 75),
+          likeCount: 0,
+          viewCount: 0,
+          recentViewCount: 0,
+          viewVelocity: 0,
+          targetSellDays: Number(targetSellDays || 7),
+        },
+      });
+      setDynamicPrice(result);
+      setNotice("動的価格プランを作成しました。公開後は閲覧数といいねを反映して再計算できます");
     });
   }
 
@@ -327,6 +355,10 @@ export function SellPage() {
             <Tags size={16} />
             {busy === "price" ? "提案中" : "価格提案"}
           </button>
+          <button disabled={busy === "dynamic-price" || !token} onClick={runDynamicPrice}>
+            <Sparkles size={16} />
+            {busy === "dynamic-price" ? "計算中" : "動的価格"}
+          </button>
           <button disabled={busy === "fraud" || !token} onClick={runFraudCheck}>
             <ShieldCheck size={16} />
             {busy === "fraud" ? "確認中" : "出品チェック"}
@@ -400,6 +432,21 @@ export function SellPage() {
             <small>
               相場 ¥{priceSuggestion.marketRange[0].toLocaleString()} - ¥{priceSuggestion.marketRange[1].toLocaleString()} / {priceSuggestion.sellThroughDays}日以内の売却目安
             </small>
+          </div>
+        )}
+        {dynamicPrice && (
+          <div className="ai-result-card dynamic-price-card">
+            <strong>動的価格プラン</strong>
+            <span>初期推奨 ¥{dynamicPrice.recommendedPrice.toLocaleString()}</span>
+            <small>{dynamicPrice.expectedSellDays}日目安 / 信頼度 {Math.round(dynamicPrice.confidence * 100)}%</small>
+            <div className="mini-price-path">
+              {dynamicPrice.pricePath.slice(0, 10).map((point) => (
+                <span key={point.day}>
+                  <b>{point.day}日</b>
+                  <em>¥{point.price.toLocaleString()}</em>
+                </span>
+              ))}
+            </div>
           </div>
         )}
         {fraudResult && (

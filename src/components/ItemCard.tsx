@@ -20,7 +20,6 @@ export function ItemCard({
     <article className="item-card">
       <Link to={`/items/${item.id}`} className="image-wrap">
         <ItemImage src={item.images[0]} alt={item.title} />
-        <span className="category-badge">{item.category}</span>
         <strong className="price-badge">¥{item.price.toLocaleString()}</strong>
         <small className="condition-badge">状態 {item.conditionScore}</small>
         {statusLabel && <small className="status-badge">{statusLabel}</small>}

@@ -93,7 +93,6 @@ export function HomePage() {
         <img src="/theme-reference.png" alt="" />
         <div className="hero-copy">
           <p>状態と文脈を売る</p>
-          <strong>AIがキズ・相場・売れやすさを見える化</strong>
         </div>
       </section>
 

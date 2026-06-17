@@ -14,10 +14,16 @@ export const fallbackItems: Item[] = [
     status: "published",
     conditionScore: 82,
     context: "角スレ小、通学サイズ、90s leather",
-    images: ["https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=80"],
+    images: [
+      "https://images.unsplash.com/photo-1594223274512-ad4803739b7c?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=900&q=80",
+    ],
     sellerCanDelete: true,
     likeCount: 12,
     likedByMe: false,
+    viewCount: 186,
+    recentViewCount: 22,
+    viewVelocity: 14.7,
   },
   {
     id: 2,
@@ -35,6 +41,9 @@ export const fallbackItems: Item[] = [
     sellerCanDelete: true,
     likeCount: 8,
     likedByMe: false,
+    viewCount: 94,
+    recentViewCount: 11,
+    viewVelocity: 7.3,
   },
   {
     id: 3,
@@ -52,6 +61,9 @@ export const fallbackItems: Item[] = [
     sellerCanDelete: true,
     likeCount: 5,
     likedByMe: false,
+    viewCount: 61,
+    recentViewCount: 8,
+    viewVelocity: 5.1,
   },
 ];
 
