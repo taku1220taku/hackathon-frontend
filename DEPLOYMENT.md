@@ -121,7 +121,7 @@ After the Vercel production URL is created, add it to `CORS_ORIGIN` and redeploy
 ```bash
 API=https://<cloud-run-url>
 
-curl -s "$API/healthz"
+curl -s "$API/health"
 
 TOKEN=$(curl -s "$API/auth/login" \
   -H 'Content-Type: application/json' \
