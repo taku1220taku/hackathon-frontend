@@ -89,13 +89,6 @@ export function HomePage() {
 
   return (
     <section className="main-pane">
-      <section className="hero-band">
-        <img src="/theme-reference.png" alt="" />
-        <div className="hero-copy">
-          <p>状態と文脈を売る</p>
-        </div>
-      </section>
-
       <div className="notice">{notice}</div>
 
       <section className="toolbar marketplace-toolbar" aria-label="検索とフィルタ">

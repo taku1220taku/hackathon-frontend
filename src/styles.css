@@ -290,51 +290,6 @@ h3 {
   color: #ffd8d2;
 }
 
-.hero-band {
-  position: relative;
-  min-height: 260px;
-  margin-top: 24px;
-  overflow: hidden;
-  border: 1px solid rgba(245, 237, 223, 0.12);
-  border-radius: 8px;
-  background: #111;
-}
-
-.hero-band img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0.66;
-}
-
-.hero-band::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(90deg, rgba(9, 10, 8, 0.9), rgba(9, 10, 8, 0.08));
-}
-
-.hero-copy {
-  position: relative;
-  z-index: 1;
-  width: min(560px, 100%);
-  padding: 30px;
-}
-
-.hero-copy p {
-  margin-bottom: 10px;
-  color: #dfbf80;
-  font-weight: 800;
-}
-
-.hero-copy strong {
-  display: block;
-  font-size: clamp(1.9rem, 4vw, 3.7rem);
-  line-height: 1.05;
-}
-
 .notice {
   margin: 16px 0;
   border: 1px solid rgba(134, 175, 111, 0.28);
