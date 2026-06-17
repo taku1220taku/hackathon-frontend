@@ -44,7 +44,7 @@ UPLOAD_DIR=uploads
 PUBLIC_BASE_URL=http://localhost:8080
 ```
 
-Cloud Runなど永続ディスクに依存できない環境ではGCSを使います。Cloud Runのサービスアカウントに対象バケットへの書き込み権限を付与してください。
+Cloud Runなど永続ディスクに依存できない環境ではGCSを使います。Cloud Runのサービスアカウントには対象バケットの `roles/storage.objectCreator` を付与してください。
 
 ```text
 IMAGE_STORAGE=gcs
@@ -53,7 +53,7 @@ GCS_PREFIX=uploads
 GCS_PUBLIC_BASE_URL=https://storage.googleapis.com/<your-gcs-bucket>
 ```
 
-本番ではアップロード画像に長い `Cache-Control` を付与し、Cloud CDNを有効化したBackend Bucketを作成して画像配信の最適化に使えます。HTTPSのCDN配信には独自ドメインと証明書を設定してください。
+本番ではアップロード画像に長い `Cache-Control` を付与し、Cloud CDNを有効化したBackend Bucketを作成して画像配信の最適化に使えます。公開画像は `roles/storage.legacyObjectReader` で個別オブジェクトのGETだけを許可し、バケット一覧を公開しない設定にします。HTTPSのCDN配信には独自ドメインと証明書を設定してください。
 
 デモログイン:
 

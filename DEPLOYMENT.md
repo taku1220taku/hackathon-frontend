@@ -58,8 +58,14 @@ gcloud projects add-iam-policy-binding "$PROJECT_ID" \
 
 gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
   --member="serviceAccount:${RUNTIME_SA}" \
-  --role="roles/storage.objectAdmin"
+  --role="roles/storage.objectCreator"
+
+gcloud storage buckets add-iam-policy-binding "gs://${GCS_BUCKET}" \
+  --member="allUsers" \
+  --role="roles/storage.legacyObjectReader"
 ```
+
+`roles/storage.objectViewer` を `allUsers` に付与するとバケット一覧も公開されるため、公開商品画像は `roles/storage.legacyObjectReader` で個別オブジェクトのGETだけを許可します。
 
 画像をCloud CDNで配信する場合はCompute APIを有効化し、Backend Bucketを作成します。HTTPSで使うには独自ドメインと証明書を追加してください。
 
