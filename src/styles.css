@@ -844,6 +844,10 @@ meter::-webkit-meter-optimum-value {
   border-radius: 8px;
 }
 
+.pending-preview img {
+  opacity: 0.72;
+}
+
 .preview-grid img {
   width: 100%;
   height: auto;
@@ -872,6 +876,18 @@ meter::-webkit-meter-optimum-value {
 
 .preview-remove span {
   line-height: 1;
+}
+
+.preview-uploading {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  border-radius: 999px;
+  padding: 6px 8px;
+  background: rgba(12, 14, 12, 0.86);
+  color: #f5eddf;
+  font-size: 0.72rem;
+  font-weight: 850;
 }
 
 .preview-add {

@@ -1,5 +1,5 @@
 import { Bot, Camera, ImagePlus, PackagePlus, ShieldCheck, Sparkles, Tags, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { api, uploadImage } from "../lib/api";
 import { useAuth } from "../lib/auth";
@@ -54,6 +54,8 @@ export function SellPage() {
   const navigate = useNavigate();
   const { token, user } = useAuth();
   const [draft, setDraft] = useState<DraftItem>(initialDraft);
+  const [uploadPreviewUrls, setUploadPreviewUrls] = useState<string[]>([]);
+  const uploadPreviewUrlsRef = useRef<string[]>([]);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState(user ? "" : "出品するにはログインしてください");
   const [blurBackground, setBlurBackground] = useState(false);
@@ -70,6 +72,14 @@ export function SellPage() {
       setNotice("出品するにはログインしてください");
     }
   }, [token, user]);
+
+  useEffect(() => {
+    uploadPreviewUrlsRef.current = uploadPreviewUrls;
+  }, [uploadPreviewUrls]);
+
+  useEffect(() => () => {
+    uploadPreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
 
   async function runTask(name: string, task: () => Promise<void>) {
     try {
@@ -153,6 +163,8 @@ export function SellPage() {
       return true;
     });
     if (validFiles.length === 0) return;
+    const pendingPreviewUrls = validFiles.map((file) => URL.createObjectURL(file));
+    setUploadPreviewUrls((current) => [...current, ...pendingPreviewUrls]);
     await runTask("upload", async () => {
       if (!token) throw new Error("画像添付にはログインが必要です");
       const filesToUpload = blurBackground ? await Promise.all(validFiles.map(imageFileWithBlurredBackground)) : validFiles;
@@ -167,6 +179,8 @@ export function SellPage() {
       }));
       setNotice(blurBackground ? `${uploaded.length}枚の画像を背景ぼかし付きでアップロードしました` : `${uploaded.length}枚の画像をアップロードしました`);
     });
+    pendingPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
+    setUploadPreviewUrls((current) => current.filter((url) => !pendingPreviewUrls.includes(url)));
   }
 
   function removeImage(index: number) {
@@ -199,6 +213,8 @@ export function SellPage() {
     });
   }
 
+  const displayImageUrls = [...draft.imageUrls, ...uploadPreviewUrls];
+
   return (
     <section className="two-column-page">
       <section className="panel">
@@ -212,7 +228,7 @@ export function SellPage() {
           <p className="field-note">商品名と説明文を自動入力します</p>
         </div>
         <div
-          className={draft.imageUrls.length > 0 ? "dropzone has-image" : "dropzone"}
+          className={displayImageUrls.length > 0 ? "dropzone has-image" : "dropzone"}
           onDragOver={(event) => event.preventDefault()}
           onDrop={(event) => {
             event.preventDefault();
@@ -230,27 +246,34 @@ export function SellPage() {
               event.currentTarget.value = "";
             }}
           />
-          {draft.imageUrls.length > 0 ? (
+          {displayImageUrls.length > 0 ? (
             <>
               <div className="preview-grid">
-                {draft.imageUrls.map((url, index) => (
-                  <div key={`${url}-${index}`} className="preview-card">
-                    <img src={url} alt={`出品画像 ${index + 1}`} />
-                    <button
-                      type="button"
-                      className="preview-remove"
-                      aria-label={`画像 ${index + 1} を削除`}
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        removeImage(index);
-                      }}
-                    >
-                      <X size={14} />
-                      <span>削除</span>
-                    </button>
-                  </div>
-                ))}
+                {displayImageUrls.map((url, index) => {
+                  const isPendingPreview = index >= draft.imageUrls.length;
+                  return (
+                    <div key={`${url}-${index}`} className={isPendingPreview ? "preview-card pending-preview" : "preview-card"}>
+                      <img src={url} alt={`出品画像 ${index + 1}`} />
+                      {isPendingPreview ? (
+                        <span className="preview-uploading">アップロード中</span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="preview-remove"
+                          aria-label={`画像 ${index + 1} を削除`}
+                          onClick={(event) => {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            removeImage(index);
+                          }}
+                        >
+                          <X size={14} />
+                          <span>削除</span>
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
                 <label className="preview-add" htmlFor="sell-images">
                   <ImagePlus size={18} />
                   <span>追加</span>
@@ -388,8 +411,8 @@ export function SellPage() {
           </div>
         )}
         <div className="action-row">
-          <button disabled={busy === "item" || !token} onClick={() => createItem("draft")}>下書き</button>
-          <button className="primary" disabled={busy === "item" || !token} onClick={() => createItem("published")}>
+          <button disabled={Boolean(busy) || !token} onClick={() => createItem("draft")}>下書き</button>
+          <button className="primary" disabled={Boolean(busy) || !token} onClick={() => createItem("published")}>
             公開
           </button>
         </div>
