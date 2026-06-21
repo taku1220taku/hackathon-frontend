@@ -20,7 +20,6 @@ export function HomePage() {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [notice, setNotice] = useState("API未接続でもデモデータで体験できます");
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -60,11 +59,9 @@ export function HomePage() {
       const nextItems = asArray(result.items).filter((item) => item.sellerId !== user?.id);
       setItems((current) => (replace ? nextItems : [...current, ...nextItems]));
       setHasMore(Boolean(result.hasMore));
-      setNotice(usePersonalized ? "AIおすすめを同期しました" : "API接続中: 商品一覧を同期しました");
     } catch {
       setItems(fallbackItems);
       setHasMore(false);
-      setNotice("API未接続でもデモデータで体験できます");
     } finally {
       setLoading(false);
     }
@@ -72,7 +69,6 @@ export function HomePage() {
 
   async function toggleLike(item: Item) {
     if (!token) {
-      setNotice("いいねするにはログインしてください");
       return;
     }
     try {
@@ -82,15 +78,13 @@ export function HomePage() {
         body: {},
       });
       setItems((current) => current.map((nextItem) => (nextItem.id === updated.id ? updated : nextItem)));
-    } catch (error) {
-      setNotice(error instanceof Error ? error.message : "いいねに失敗しました");
+    } catch {
+      // The like button state will remain unchanged if the request fails.
     }
   }
 
   return (
     <section className="main-pane">
-      <div className="notice">{notice}</div>
-
       <section className="toolbar marketplace-toolbar" aria-label="検索とフィルタ">
         <label className="search-field">
           <Search size={18} />
