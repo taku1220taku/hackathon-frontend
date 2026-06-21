@@ -147,6 +147,7 @@ export function SellPage() {
         token,
         body: {
           title: draft.title,
+          description: draft.description,
           category: draft.category,
           categoryId: draft.categoryId,
           currentPrice,
