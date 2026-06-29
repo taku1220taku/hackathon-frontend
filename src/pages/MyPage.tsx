@@ -81,19 +81,24 @@ export function MyPage() {
       <div className="my-item-list">
         {list.map((item) => (
           <article key={item.id} className="my-item-row">
-            <Link to={`/items/${item.id}`} className="my-item-thumb">
+            <Link to={item.status === "draft" ? `/items/${item.id}/edit` : `/items/${item.id}`} className="my-item-thumb">
               <ItemImage src={item.images[0]} alt="" />
             </Link>
-            <Link to={`/items/${item.id}`} className="my-item-info">
-              <strong>{item.title}</strong>
+            <Link to={item.status === "draft" ? `/items/${item.id}/edit` : `/items/${item.id}`} className="my-item-info">
+              <strong>{item.title || "商品名未入力"}</strong>
               <span>{item.category}</span>
-              <b>¥{item.price.toLocaleString()}</b>
+              <b>{item.price > 0 ? `¥${item.price.toLocaleString()}` : "価格未設定"}</b>
             </Link>
             <div className="my-item-actions">
               {draftActions && (
                 <button disabled={busy === item.id} onClick={() => publishDraft(item)}>
                   公開
                 </button>
+              )}
+              {item.status !== "sold" && (
+                <Link className="icon-action" to={`/items/${item.id}/edit`} aria-label="商品を編集">
+                  <PencilLine size={15} />
+                </Link>
               )}
               {item.sellerCanDelete ? (
                 <button className="icon-action danger-action" disabled={busy === item.id} onClick={() => deleteItem(item)} aria-label="削除">

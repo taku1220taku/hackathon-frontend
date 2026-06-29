@@ -1,6 +1,6 @@
 import { Bot, Camera, ImagePlus, PackagePlus, ShieldCheck, Sparkles, Tags, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { api, uploadImage } from "../lib/api";
 import { useAuth } from "../lib/auth";
 import { categoryByID, categoryByLabel, categoryOptions } from "../lib/categories";
@@ -52,6 +52,9 @@ async function imageFileWithBlurredBackground(file: File): Promise<File> {
 
 export function SellPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { id } = useParams();
+  const editingID = Number(id || 0);
   const { token, user } = useAuth();
   const [draft, setDraft] = useState<DraftItem>(initialDraft);
   const [uploadPreviewUrls, setUploadPreviewUrls] = useState<string[]>([]);
@@ -63,6 +66,8 @@ export function SellPage() {
   const [priceSuggestion, setPriceSuggestion] = useState<PriceSuggestion | null>(null);
   const [dynamicPrice, setDynamicPrice] = useState<DynamicPriceResult | null>(null);
   const [fraudResult, setFraudResult] = useState<FraudCheckResult | null>(null);
+  const [existingStatus, setExistingStatus] = useState<"draft" | "published" | null>(null);
+  const [loadingItem, setLoadingItem] = useState(Boolean(editingID));
 
   useEffect(() => {
     if (user) {
@@ -73,6 +78,50 @@ export function SellPage() {
       setNotice("出品するにはログインしてください");
     }
   }, [token, user]);
+
+  useEffect(() => {
+    if (!editingID || !token) {
+      setLoadingItem(false);
+      return;
+    }
+    let cancelled = false;
+    setLoadingItem(true);
+    api<Item>(`/me/items/${editingID}`, { token })
+      .then((item) => {
+        if (cancelled) return;
+        if (item.status === "sold") {
+          navigate(`/items/${item.id}`, { replace: true });
+          return;
+        }
+        setDraft({
+          title: item.title,
+          description: item.description,
+          categoryId: item.categoryId,
+          category: item.category,
+          price: item.price > 0 ? item.price : "",
+          shippingFee: item.shippingFee,
+          conditionScore: item.conditionScore,
+          imageUrls: item.images,
+          imageNames: item.images.map((url) => url.split("/").pop() ?? "image"),
+          memo: "",
+        });
+        setExistingStatus(item.status);
+        setPriceSuggestion(null);
+        setDynamicPrice(null);
+        setFraudResult(null);
+        const state = location.state as { notice?: string } | null;
+        setNotice(state?.notice ?? "");
+      })
+      .catch((error) => {
+        if (!cancelled) setNotice(error instanceof Error ? error.message : "商品を取得できませんでした");
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingItem(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editingID, token]);
 
   useEffect(() => {
     uploadPreviewUrlsRef.current = uploadPreviewUrls;
@@ -151,6 +200,7 @@ export function SellPage() {
           category: draft.category,
           categoryId: draft.categoryId,
           currentPrice,
+          marketRange: priceSuggestion?.marketRange,
           conditionScore: Number(draft.conditionScore || 75),
           likeCount: 0,
           viewCount: 0,
@@ -206,6 +256,9 @@ export function SellPage() {
         imageUrls: [...current.imageUrls, ...uploaded.map((item) => item.url)],
         imageNames: [...current.imageNames, ...uploaded.map((item) => item.name)],
       }));
+      setPriceSuggestion(null);
+      setDynamicPrice(null);
+      setFraudResult(null);
       setNotice(blurBackground ? `${uploaded.length}枚の画像を背景ぼかし付きでアップロードしました` : `${uploaded.length}枚の画像をアップロードしました`);
     });
     pendingPreviewUrls.forEach((url) => URL.revokeObjectURL(url));
@@ -218,28 +271,53 @@ export function SellPage() {
       imageUrls: current.imageUrls.filter((_, currentIndex) => currentIndex !== index),
       imageNames: current.imageNames.filter((_, currentIndex) => currentIndex !== index),
     }));
+    setPriceSuggestion(null);
+    setDynamicPrice(null);
+    setFraudResult(null);
   }
 
-  async function createItem(status: "draft" | "published") {
+  async function saveItem(status: "draft" | "published") {
     await runTask("item", async () => {
-      if (!draft.title.trim()) throw new Error("商品名を入力してください");
-      if (!draft.description.trim()) throw new Error("説明文を入力してください");
-      if (draft.price === "" || Number(draft.price) <= 0) throw new Error("価格を入力してください");
-      const item = await api<Item>("/items", {
-        method: "POST",
+      if (status === "published" && !draft.title.trim()) throw new Error("公開するには商品名を入力してください");
+      if (status === "published" && !draft.description.trim()) throw new Error("公開するには説明文を入力してください");
+      if (status === "published" && (draft.price === "" || Number(draft.price) <= 0)) throw new Error("公開するには価格を入力してください");
+      const item = await api<Item>(editingID ? `/items/${editingID}` : "/items", {
+        method: editingID ? "PATCH" : "POST",
         token,
         body: {
           ...draft,
-          price: Number(draft.price),
-          conditionScore: Number(draft.conditionScore || 75),
+          price: Number(draft.price || 0),
+          conditionScore: Number(draft.conditionScore || 0),
           status,
           context: draft.description.split("\n")[0],
           images: draft.imageUrls,
         },
       });
-      setNotice(status === "published" ? "商品を公開しました" : "下書きを保存しました");
-      if (status === "published") navigate(`/items/${item.id}`);
+      if (status === "published") {
+        navigate(`/items/${item.id}`);
+        return;
+      }
+      if (!editingID) {
+        navigate(`/items/${item.id}/edit`, {
+          replace: true,
+          state: { notice: "下書きを保存しました" },
+        });
+        return;
+      }
+      setExistingStatus("draft");
+      setNotice("下書きを保存しました");
     });
+  }
+
+  function updateProductDraft(patch: Partial<DraftItem>) {
+    setDraft((current) => ({ ...current, ...patch }));
+    setPriceSuggestion(null);
+    setDynamicPrice(null);
+    setFraudResult(null);
+  }
+
+  if (loadingItem) {
+    return <section className="center-page"><div className="notice">商品を読み込み中です</div></section>;
   }
 
   const displayImageUrls = [...draft.imageUrls, ...uploadPreviewUrls];
@@ -249,7 +327,7 @@ export function SellPage() {
       <section className="panel">
         <div className="panel-title">
           <Sparkles size={18} />
-          <h2>AI出品</h2>
+          <h2>{editingID ? "AI商品編集" : "AI出品"}</h2>
         </div>
         {notice && <div className="notice">{notice}</div>}
         <div>
@@ -349,7 +427,11 @@ export function SellPage() {
               max="60"
               value={targetSellDays}
               placeholder="7"
-              onChange={(event) => setTargetSellDays(event.target.value === "" ? "" : Number(event.target.value))}
+              onChange={(event) => {
+                setTargetSellDays(event.target.value === "" ? "" : Number(event.target.value));
+                setPriceSuggestion(null);
+                setDynamicPrice(null);
+              }}
             />
           </label>
           <button disabled={busy === "price" || !token} onClick={runPriceSuggest}>
@@ -370,14 +452,14 @@ export function SellPage() {
       <section className="panel">
         <div className="panel-title">
           <PackagePlus size={18} />
-          <h2>出品フォーム</h2>
+          <h2>{editingID ? "商品編集フォーム" : "出品フォーム"}</h2>
         </div>
         <label>
           商品名
           <input
             value={draft.title}
             placeholder="例: Nike Air Force 1 ホワイト"
-            onChange={(event) => setDraft({ ...draft, title: event.target.value })}
+            onChange={(event) => updateProductDraft({ title: event.target.value })}
           />
         </label>
         <label>
@@ -386,7 +468,7 @@ export function SellPage() {
             value={draft.categoryId}
             onChange={(event) => {
               const category = categoryByID(Number(event.target.value));
-              setDraft({ ...draft, categoryId: category.id, category: category.label });
+              updateProductDraft({ categoryId: category.id, category: category.label });
             }}
           >
             {categoryOptions.map((category) => (
@@ -403,7 +485,11 @@ export function SellPage() {
               type="number"
               value={draft.price}
               placeholder="例: 9800"
-              onChange={(event) => setDraft({ ...draft, price: event.target.value === "" ? "" : Number(event.target.value) })}
+              onChange={(event) => {
+                setDraft((current) => ({ ...current, price: event.target.value === "" ? "" : Number(event.target.value) }));
+                setDynamicPrice(null);
+                setFraudResult(null);
+              }}
             />
           </label>
           <label>
@@ -414,7 +500,7 @@ export function SellPage() {
               max="100"
               placeholder="75"
               value={draft.conditionScore}
-              onChange={(event) => setDraft({ ...draft, conditionScore: event.target.value === "" ? "" : Number(event.target.value) })}
+              onChange={(event) => updateProductDraft({ conditionScore: event.target.value === "" ? "" : Number(event.target.value) })}
             />
           </label>
         </div>
@@ -423,7 +509,7 @@ export function SellPage() {
           <textarea
             value={draft.description}
             placeholder="商品の状態、購入時期、使用頻度、傷や汚れの位置を書いてください。"
-            onChange={(event) => setDraft({ ...draft, description: event.target.value })}
+            onChange={(event) => updateProductDraft({ description: event.target.value })}
           />
         </label>
         {priceSuggestion && (
@@ -459,9 +545,11 @@ export function SellPage() {
           </div>
         )}
         <div className="action-row">
-          <button disabled={Boolean(busy) || !token} onClick={() => createItem("draft")}>下書き</button>
-          <button className="primary" disabled={Boolean(busy) || !token} onClick={() => createItem("published")}>
-            公開
+          <button disabled={Boolean(busy) || !token} onClick={() => saveItem("draft")}>
+            {existingStatus === "published" ? "公開停止" : "下書きを保存"}
+          </button>
+          <button className="primary" disabled={Boolean(busy) || !token} onClick={() => saveItem("published")}>
+            {existingStatus === "published" ? "変更を保存" : "公開する"}
           </button>
         </div>
       </section>

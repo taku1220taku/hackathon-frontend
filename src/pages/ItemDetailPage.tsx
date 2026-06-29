@@ -187,7 +187,10 @@ export function ItemDetailPage() {
           <Link className="primary" to="/login">ログインして購入する</Link>
         )}
         {canStopPublishing && (
-          <button className="danger" disabled={busy} onClick={stopPublishing}>公開停止</button>
+          <div className="action-row">
+            <Link className="primary" to={`/items/${item.id}/edit`}>編集する</Link>
+            <button className="danger" disabled={busy} onClick={stopPublishing}>公開停止</button>
+          </div>
         )}
         <p>{item.description}</p>
         <div className="score-row">

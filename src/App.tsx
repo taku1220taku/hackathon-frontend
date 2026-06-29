@@ -26,6 +26,7 @@ export function App() {
             <Route path="/items/:id" element={<ItemDetailPage />} />
             <Route element={<RequireAuth />}>
               <Route path="/sell" element={<SellPage />} />
+              <Route path="/items/:id/edit" element={<SellPage />} />
               <Route path="/transactions" element={<TransactionsPage />} />
               <Route path="/transactions/:id" element={<TransactionDetailPage />} />
               <Route path="/me" element={<MyPage />} />
