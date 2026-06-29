@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">CapCycle</title>
+  <defs>
+    <marker
+      id="cycle-arrow"
+      viewBox="0 0 10 10"
+      refX="9"
+      refY="5"
+      markerWidth="12"
+      markerHeight="12"
+      markerUnits="userSpaceOnUse"
+      orient="auto"
+    >
+      <path d="M0 0 10 5 0 10Z" fill="#dca34c" />
+    </marker>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#17120c" />
+  <path
+    d="M46 17A21 21 0 1 0 46 47"
+    fill="none"
+    stroke="#dca34c"
+    stroke-width="8"
+    stroke-linecap="round"
+    marker-end="url(#cycle-arrow)"
+  />
+</svg>
